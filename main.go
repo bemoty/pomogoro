@@ -1,7 +1,6 @@
 package main
 
 import (
-	_ "embed"
 	"flag"
 	"fmt"
 	"os"
@@ -13,12 +12,6 @@ import (
 
 	"github.com/energye/systray"
 )
-
-//go:embed icons/work.png
-var iconWork []byte
-
-//go:embed icons/break.png
-var iconBreak []byte
 
 const pidFile = "/tmp/pomogoro.pid"
 
@@ -67,7 +60,7 @@ func daemonize() {
 }
 
 func onReady() {
-	systray.SetIcon(iconWork)
+	systray.SetIcon(renderIcon(0, true))
 	systray.SetTitle("W 25:00")
 	systray.SetTooltip("pomogoro")
 
@@ -97,11 +90,7 @@ func onReady() {
 		statusItem.SetTitle(u.title)
 		pauseItem.SetTitle(u.pauseLabel)
 		deskItem.SetTitle(u.deskState)
-		if u.isWork {
-			systray.SetIcon(iconWork)
-		} else {
-			systray.SetIcon(iconBreak)
-		}
+		systray.SetIcon(renderIcon(u.progress, u.isWork))
 	})
 }
 

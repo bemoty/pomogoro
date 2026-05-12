@@ -42,6 +42,7 @@ type UIUpdate struct {
 	pauseLabel string
 	isWork     bool
 	deskState  string
+	progress   float64
 }
 
 func deskLabel(standing bool) string {
@@ -55,6 +56,22 @@ func (s *state) enterWork() {
 	s.deskUp = !s.deskUp
 	s.phase = Work
 	s.remaining = workDuration
+}
+
+func (s *state) phaseDuration() time.Duration {
+	switch s.phase {
+	case Work:
+		return workDuration
+	case ShortBreak:
+		return shortBreakDuration
+	default:
+		return longBreakDuration
+	}
+}
+
+func (s *state) progress() float64 {
+	total := s.phaseDuration()
+	return (total - s.remaining).Seconds() / total.Seconds()
 }
 
 func (s *state) trayTitle() string {
@@ -83,7 +100,7 @@ func runTimer(cmds <-chan Command, update func(UIUpdate)) {
 	s := state{}
 	s.enterWork()
 	notify("Work", deskLabel(s.deskUp))
-	update(UIUpdate{title: s.trayTitle(), pauseLabel: "Pause", isWork: true, deskState: deskLabel(s.deskUp)})
+	update(UIUpdate{title: s.trayTitle(), pauseLabel: "Pause", isWork: true, deskState: deskLabel(s.deskUp), progress: s.progress()})
 
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
@@ -101,7 +118,7 @@ func runTimer(cmds <-chan Command, update func(UIUpdate)) {
 				if !isWork {
 					ds = deskLabel(!s.deskUp)
 				}
-				update(UIUpdate{title: s.trayTitle(), pauseLabel: "Pause", isWork: isWork, deskState: ds})
+				update(UIUpdate{title: s.trayTitle(), pauseLabel: "Pause", isWork: isWork, deskState: ds, progress: s.progress()})
 				continue
 			}
 
@@ -127,7 +144,7 @@ func runTimer(cmds <-chan Command, update func(UIUpdate)) {
 			if !isWork {
 				ds = deskLabel(!s.deskUp)
 			}
-			update(UIUpdate{title: s.trayTitle(), pauseLabel: "Pause", isWork: isWork, deskState: ds})
+			update(UIUpdate{title: s.trayTitle(), pauseLabel: "Pause", isWork: isWork, deskState: ds, progress: s.progress()})
 
 		case cmd := <-cmds:
 			switch cmd {
@@ -138,7 +155,7 @@ func runTimer(cmds <-chan Command, update func(UIUpdate)) {
 				if !isWork {
 					ds = deskLabel(!s.deskUp)
 				}
-				update(UIUpdate{title: s.trayTitle(), pauseLabel: pauseLabel(s.paused), isWork: isWork, deskState: ds})
+				update(UIUpdate{title: s.trayTitle(), pauseLabel: pauseLabel(s.paused), isWork: isWork, deskState: ds, progress: s.progress()})
 
 			case CmdSkip:
 				s.paused = false
@@ -156,14 +173,14 @@ func runTimer(cmds <-chan Command, update func(UIUpdate)) {
 				if !isWork {
 					ds = deskLabel(!s.deskUp)
 				}
-				update(UIUpdate{title: s.trayTitle(), pauseLabel: "Pause", isWork: isWork, deskState: ds})
+				update(UIUpdate{title: s.trayTitle(), pauseLabel: "Pause", isWork: isWork, deskState: ds, progress: s.progress()})
 
 			case CmdReset:
 				s.completedPomodoros = 0
 				s.paused = false
 				s.enterWork()
 				notify("Work", deskLabel(s.deskUp))
-				update(UIUpdate{title: s.trayTitle(), pauseLabel: "Pause", isWork: true, deskState: deskLabel(s.deskUp)})
+				update(UIUpdate{title: s.trayTitle(), pauseLabel: "Pause", isWork: true, deskState: deskLabel(s.deskUp), progress: s.progress()})
 
 			case CmdQuit:
 				return
