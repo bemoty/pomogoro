@@ -2,8 +2,10 @@ package main
 
 import (
 	_ "embed"
+	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strconv"
 	"strings"
@@ -21,21 +23,47 @@ var iconBreak []byte
 const pidFile = "/tmp/pomogoro.pid"
 
 func main() {
+	daemon := flag.Bool("d", false, "run in background")
+	flag.Parse()
+
+	if *daemon {
+		daemonize()
+	}
+
 	if err := checkSingleInstance(); err != nil {
-		notify("pomogoro", "already running")
+		notifySilent("pomogoro", "already running")
 		os.Exit(1)
 	}
 	writePID()
 	defer os.Remove(pidFile)
 
 	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT)
+	signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP)
 	go func() {
 		<-sig
+		signal.Reset()
 		systray.Quit()
 	}()
 
 	systray.Run(onReady, onExit)
+}
+
+func daemonize() {
+	devNull, err := os.Open(os.DevNull)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "daemonize:", err)
+		os.Exit(1)
+	}
+	cmd := exec.Command("/proc/self/exe")
+	cmd.Stdin = devNull
+	cmd.Stdout = devNull
+	cmd.Stderr = devNull
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+	if err := cmd.Start(); err != nil {
+		fmt.Fprintln(os.Stderr, "daemonize:", err)
+		os.Exit(1)
+	}
+	os.Exit(0)
 }
 
 func onReady() {
