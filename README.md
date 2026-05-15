@@ -19,14 +19,17 @@ CGO_ENABLED=1 go build -o pomogoro .
 cp pomogoro ~/.local/bin/pomogoro
 ```
 
-Create `~/.config/autostart/pomogoro.desktop`:
+Create `~/.local/share/applications/pomogoro.desktop`:
 
 ```ini
 [Desktop Entry]
 Type=Application
 Name=pomogoro
-Exec=%h/.local/bin/pomogoro
-X-KDE-autostart-after=panel
+Comment=Simple Pomodoro timer
+Exec=/home/josh/.local/bin/pomogoro -d
+Icon=chronometer
+Terminal=false
+Categories=Utility;Clock;
 ```
 
 ## Linux only
