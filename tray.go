@@ -69,6 +69,7 @@ func onReady() {
 	cmds := make(chan command, 4)
 
 	go runMenuLoop(pauseItem, skipItem, resetItem, quitItem, cmds)
+	go listenIPC(cmds)
 
 	go runTimer(cmds, func(u uiUpdate) {
 		systray.SetTooltip("pomogoro: " + u.title)
@@ -97,4 +98,8 @@ func runMenuLoop(pauseItem, skipItem, resetItem, quitItem *systray.MenuItem, cmd
 	}
 }
 
-func onExit() {}
+func onExit() {
+	if ipcListener != nil {
+		ipcListener.Close()
+	}
+}

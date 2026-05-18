@@ -134,7 +134,12 @@ func (s *state) skip() {
 func runTimer(cmds <-chan command, update func(uiUpdate)) {
 	s := newState()
 	notifyText("Work", deskLabel(s.deskUp))
-	update(s.toUpdate("Pause"))
+
+	emit := func(pl string) {
+		latestState.Store(s)
+		update(s.toUpdate(pl))
+	}
+	emit("Pause")
 
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
@@ -147,29 +152,29 @@ func runTimer(cmds <-chan command, update func(uiUpdate)) {
 			}
 			s.remaining -= time.Second
 			if s.remaining > 0 {
-				update(s.toUpdate("Pause"))
+				emit("Pause")
 				continue
 			}
 			s.advance()
-			update(s.toUpdate("Pause"))
+			emit("Pause")
 
 		case cmd := <-cmds:
 			switch cmd {
 			case cmdTogglePause:
 				s.paused = !s.paused
-				update(s.toUpdate(pauseLabel(s.paused)))
+				emit(pauseLabel(s.paused))
 
 			case cmdSkip:
 				s.paused = false
 				s.skip()
-				update(s.toUpdate("Pause"))
+				emit("Pause")
 
 			case cmdReset:
 				s.completedPomodoros = 0
 				s.paused = false
 				s.enterWork()
 				notify("Work", deskLabel(s.deskUp))
-				update(s.toUpdate("Pause"))
+				emit("Pause")
 
 			case cmdQuit:
 				return

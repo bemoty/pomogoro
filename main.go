@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -10,6 +11,20 @@ import (
 )
 
 func main() {
+	if len(os.Args) > 1 {
+		arg := os.Args[1]
+		if len(arg) > 0 && arg[0] != '-' {
+			switch arg {
+			case "pause", "skip", "reset", "stop", "status":
+				clientCmd(arg)
+				return
+			default:
+				fmt.Fprintf(os.Stderr, "unknown subcommand: %s\n", arg)
+				os.Exit(1)
+			}
+		}
+	}
+
 	daemon := flag.Bool("d", false, "run in background")
 	flag.Parse()
 

@@ -1,3 +1,5 @@
+//go:build linux || darwin
+
 package main
 
 import (
@@ -9,13 +11,14 @@ import (
 	"syscall"
 )
 
-var pidFile = func() string {
+func runtimeFile(name string) string {
 	if dir := os.Getenv("XDG_RUNTIME_DIR"); dir != "" {
-		return filepath.Join(dir, "pomogoro.pid")
+		return filepath.Join(dir, name)
 	}
-	return fmt.Sprintf("/tmp/pomogoro-%d.pid", os.Getuid())
-}()
+	return fmt.Sprintf("/tmp/pomogoro-%d-%s", os.Getuid(), name)
+}
 
+var pidFile = runtimeFile("pomogoro.pid")
 var pidLock *os.File
 
 func daemonize() {
