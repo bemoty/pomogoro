@@ -5,21 +5,21 @@ import (
 	"time"
 )
 
-type Phase int
+type phase int
 
 const (
-	Work Phase = iota
-	ShortBreak
-	LongBreak
+	work phase = iota
+	shortBreak
+	longBreak
 )
 
-type Command int
+type command int
 
 const (
-	CmdTogglePause Command = iota
-	CmdSkip
-	CmdReset
-	CmdQuit
+	cmdTogglePause command = iota
+	cmdSkip
+	cmdReset
+	cmdQuit
 )
 
 const (
@@ -30,21 +30,17 @@ const (
 )
 
 type state struct {
-	phase              Phase
+	phase              phase
 	remaining          time.Duration
 	completedPomodoros int
 	deskUp             bool
 	paused             bool
 }
 
-type UIUpdate struct {
-	title         string
-	pauseLabel    string
-	skipLabel     string
-	pomodoroCount string
-	isWork        bool
-	deskState     string
-	progress      float64
+func newState() state {
+	s := state{}
+	s.enterWork()
+	return s
 }
 
 func deskLabel(standing bool) string {
@@ -56,51 +52,18 @@ func deskLabel(standing bool) string {
 
 func (s *state) enterWork() {
 	s.deskUp = !s.deskUp
-	s.phase = Work
+	s.phase = work
 	s.remaining = workDuration
 }
 
 func (s *state) phaseDuration() time.Duration {
 	switch s.phase {
-	case Work:
+	case work:
 		return workDuration
-	case ShortBreak:
+	case shortBreak:
 		return shortBreakDuration
 	default:
 		return longBreakDuration
-	}
-}
-
-func (s *state) uiUpdate(pauseLabel string) UIUpdate {
-	isWork := s.phase == Work
-	ds := deskLabel(s.deskUp)
-	if !isWork {
-		ds = deskLabel(!s.deskUp)
-	}
-
-	skipLabel := "Skip to break"
-	if !isWork {
-		skipLabel = "Skip to work"
-	}
-
-	var pomCount string
-	switch s.phase {
-	case Work:
-		pomCount = fmt.Sprintf("Pomodoro %d / %d", s.completedPomodoros+1, pomodorosPerCycle)
-	case ShortBreak:
-		pomCount = fmt.Sprintf("Break (%d / %d done)", s.completedPomodoros, pomodorosPerCycle)
-	case LongBreak:
-		pomCount = fmt.Sprintf("Long break (%d / %d done)", s.completedPomodoros, pomodorosPerCycle)
-	}
-
-	return UIUpdate{
-		title:         s.trayTitle(),
-		pauseLabel:    pauseLabel,
-		skipLabel:     skipLabel,
-		pomodoroCount: pomCount,
-		isWork:        isWork,
-		deskState:     ds,
-		progress:      s.progress(),
 	}
 }
 
@@ -116,11 +79,11 @@ func (s *state) trayTitle() string {
 
 	var prefix string
 	switch s.phase {
-	case Work:
+	case work:
 		prefix = "W"
-	case ShortBreak:
+	case shortBreak:
 		prefix = "B"
-	case LongBreak:
+	case longBreak:
 		prefix = "LB"
 	}
 
@@ -131,11 +94,47 @@ func (s *state) trayTitle() string {
 	return title
 }
 
-func runTimer(cmds <-chan Command, update func(UIUpdate)) {
-	s := state{}
-	s.enterWork()
+func (s *state) advance() {
+	switch s.phase {
+	case work:
+		s.completedPomodoros++
+		if s.completedPomodoros >= pomodorosPerCycle {
+			s.phase = longBreak
+			s.remaining = longBreakDuration
+			notify("Long break", "15 minutes. Well done. "+deskLabel(!s.deskUp))
+		} else {
+			s.phase = shortBreak
+			s.remaining = shortBreakDuration
+			notify("Short break", "5 minutes. "+deskLabel(!s.deskUp))
+		}
+	case shortBreak, longBreak:
+		if s.phase == longBreak {
+			s.completedPomodoros = 0
+		}
+		s.enterWork()
+		notify("Work", deskLabel(s.deskUp))
+	}
+}
+
+func (s *state) skip() {
+	switch s.phase {
+	case work:
+		s.phase = shortBreak
+		s.remaining = shortBreakDuration
+		notify("Short break", "5 minutes. "+deskLabel(!s.deskUp))
+	case shortBreak, longBreak:
+		if s.phase == longBreak {
+			s.completedPomodoros = 0
+		}
+		s.enterWork()
+		notify("Work", deskLabel(s.deskUp))
+	}
+}
+
+func runTimer(cmds <-chan command, update func(uiUpdate)) {
+	s := newState()
 	notifyText("Work", deskLabel(s.deskUp))
-	update(s.uiUpdate("Pause"))
+	update(s.toUpdate("Pause"))
 
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
@@ -148,61 +147,31 @@ func runTimer(cmds <-chan Command, update func(UIUpdate)) {
 			}
 			s.remaining -= time.Second
 			if s.remaining > 0 {
-				update(s.uiUpdate("Pause"))
+				update(s.toUpdate("Pause"))
 				continue
 			}
-
-			switch s.phase {
-			case Work:
-				s.completedPomodoros++
-				if s.completedPomodoros >= pomodorosPerCycle {
-					s.phase = LongBreak
-					s.remaining = longBreakDuration
-					notify("Long break", "15 minutes. Well done. "+deskLabel(!s.deskUp))
-				} else {
-					s.phase = ShortBreak
-					s.remaining = shortBreakDuration
-					notify("Short break", "5 minutes. "+deskLabel(!s.deskUp))
-				}
-			case ShortBreak, LongBreak:
-				if s.phase == LongBreak {
-					s.completedPomodoros = 0
-				}
-				s.enterWork()
-				notify("Work", deskLabel(s.deskUp))
-			}
-			update(s.uiUpdate("Pause"))
+			s.advance()
+			update(s.toUpdate("Pause"))
 
 		case cmd := <-cmds:
 			switch cmd {
-			case CmdTogglePause:
+			case cmdTogglePause:
 				s.paused = !s.paused
-				update(s.uiUpdate(pauseLabel(s.paused)))
+				update(s.toUpdate(pauseLabel(s.paused)))
 
-			case CmdSkip:
+			case cmdSkip:
 				s.paused = false
-				switch s.phase {
-				case Work:
-					s.phase = ShortBreak
-					s.remaining = shortBreakDuration
-					notify("Short break", "5 minutes. "+deskLabel(!s.deskUp))
-				case ShortBreak, LongBreak:
-					if s.phase == LongBreak {
-						s.completedPomodoros = 0
-					}
-					s.enterWork()
-					notify("Work", deskLabel(s.deskUp))
-				}
-				update(s.uiUpdate("Pause"))
+				s.skip()
+				update(s.toUpdate("Pause"))
 
-			case CmdReset:
+			case cmdReset:
 				s.completedPomodoros = 0
 				s.paused = false
 				s.enterWork()
 				notify("Work", deskLabel(s.deskUp))
-				update(s.uiUpdate("Pause"))
+				update(s.toUpdate("Pause"))
 
-			case CmdQuit:
+			case cmdQuit:
 				return
 			}
 		}
