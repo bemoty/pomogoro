@@ -38,11 +38,13 @@ type state struct {
 }
 
 type UIUpdate struct {
-	title      string
-	pauseLabel string
-	isWork     bool
-	deskState  string
-	progress   float64
+	title         string
+	pauseLabel    string
+	skipLabel     string
+	pomodoroCount string
+	isWork        bool
+	deskState     string
+	progress      float64
 }
 
 func deskLabel(standing bool) string {
@@ -66,6 +68,39 @@ func (s *state) phaseDuration() time.Duration {
 		return shortBreakDuration
 	default:
 		return longBreakDuration
+	}
+}
+
+func (s *state) uiUpdate(pauseLabel string) UIUpdate {
+	isWork := s.phase == Work
+	ds := deskLabel(s.deskUp)
+	if !isWork {
+		ds = deskLabel(!s.deskUp)
+	}
+
+	skipLabel := "Skip to break"
+	if !isWork {
+		skipLabel = "Skip to work"
+	}
+
+	var pomCount string
+	switch s.phase {
+	case Work:
+		pomCount = fmt.Sprintf("Pomodoro %d / %d", s.completedPomodoros+1, pomodorosPerCycle)
+	case ShortBreak:
+		pomCount = fmt.Sprintf("Break (%d / %d done)", s.completedPomodoros, pomodorosPerCycle)
+	case LongBreak:
+		pomCount = fmt.Sprintf("Long break (%d / %d done)", s.completedPomodoros, pomodorosPerCycle)
+	}
+
+	return UIUpdate{
+		title:         s.trayTitle(),
+		pauseLabel:    pauseLabel,
+		skipLabel:     skipLabel,
+		pomodoroCount: pomCount,
+		isWork:        isWork,
+		deskState:     ds,
+		progress:      s.progress(),
 	}
 }
 
@@ -99,8 +134,8 @@ func (s *state) trayTitle() string {
 func runTimer(cmds <-chan Command, update func(UIUpdate)) {
 	s := state{}
 	s.enterWork()
-	notify("Work", deskLabel(s.deskUp))
-	update(UIUpdate{title: s.trayTitle(), pauseLabel: "Pause", isWork: true, deskState: deskLabel(s.deskUp), progress: s.progress()})
+	notifyText("Work", deskLabel(s.deskUp))
+	update(s.uiUpdate("Pause"))
 
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
@@ -113,12 +148,7 @@ func runTimer(cmds <-chan Command, update func(UIUpdate)) {
 			}
 			s.remaining -= time.Second
 			if s.remaining > 0 {
-				isWork := s.phase == Work
-				ds := deskLabel(s.deskUp)
-				if !isWork {
-					ds = deskLabel(!s.deskUp)
-				}
-				update(UIUpdate{title: s.trayTitle(), pauseLabel: "Pause", isWork: isWork, deskState: ds, progress: s.progress()})
+				update(s.uiUpdate("Pause"))
 				continue
 			}
 
@@ -128,7 +158,6 @@ func runTimer(cmds <-chan Command, update func(UIUpdate)) {
 				if s.completedPomodoros >= pomodorosPerCycle {
 					s.phase = LongBreak
 					s.remaining = longBreakDuration
-					s.completedPomodoros = 0
 					notify("Long break", "15 minutes. Well done. "+deskLabel(!s.deskUp))
 				} else {
 					s.phase = ShortBreak
@@ -136,26 +165,19 @@ func runTimer(cmds <-chan Command, update func(UIUpdate)) {
 					notify("Short break", "5 minutes. "+deskLabel(!s.deskUp))
 				}
 			case ShortBreak, LongBreak:
+				if s.phase == LongBreak {
+					s.completedPomodoros = 0
+				}
 				s.enterWork()
 				notify("Work", deskLabel(s.deskUp))
 			}
-			isWork := s.phase == Work
-			ds := deskLabel(s.deskUp)
-			if !isWork {
-				ds = deskLabel(!s.deskUp)
-			}
-			update(UIUpdate{title: s.trayTitle(), pauseLabel: "Pause", isWork: isWork, deskState: ds, progress: s.progress()})
+			update(s.uiUpdate("Pause"))
 
 		case cmd := <-cmds:
 			switch cmd {
 			case CmdTogglePause:
 				s.paused = !s.paused
-				isWork := s.phase == Work
-				ds := deskLabel(s.deskUp)
-				if !isWork {
-					ds = deskLabel(!s.deskUp)
-				}
-				update(UIUpdate{title: s.trayTitle(), pauseLabel: pauseLabel(s.paused), isWork: isWork, deskState: ds, progress: s.progress()})
+				update(s.uiUpdate(pauseLabel(s.paused)))
 
 			case CmdSkip:
 				s.paused = false
@@ -165,22 +187,20 @@ func runTimer(cmds <-chan Command, update func(UIUpdate)) {
 					s.remaining = shortBreakDuration
 					notify("Short break", "5 minutes. "+deskLabel(!s.deskUp))
 				case ShortBreak, LongBreak:
+					if s.phase == LongBreak {
+						s.completedPomodoros = 0
+					}
 					s.enterWork()
 					notify("Work", deskLabel(s.deskUp))
 				}
-				isWork := s.phase == Work
-				ds := deskLabel(s.deskUp)
-				if !isWork {
-					ds = deskLabel(!s.deskUp)
-				}
-				update(UIUpdate{title: s.trayTitle(), pauseLabel: "Pause", isWork: isWork, deskState: ds, progress: s.progress()})
+				update(s.uiUpdate("Pause"))
 
 			case CmdReset:
 				s.completedPomodoros = 0
 				s.paused = false
 				s.enterWork()
 				notify("Work", deskLabel(s.deskUp))
-				update(UIUpdate{title: s.trayTitle(), pauseLabel: "Pause", isWork: true, deskState: deskLabel(s.deskUp), progress: s.progress()})
+				update(s.uiUpdate("Pause"))
 
 			case CmdQuit:
 				return

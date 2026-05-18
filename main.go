@@ -10,7 +10,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/energye/systray"
+	"fyne.io/systray"
 )
 
 const pidFile = "/tmp/pomogoro.pid"
@@ -24,7 +24,7 @@ func main() {
 	}
 
 	if err := checkSingleInstance(); err != nil {
-		notifySilent("pomogoro", "already running")
+		notifyText("pomogoro", "already running")
 		os.Exit(1)
 	}
 	writePID()
@@ -42,12 +42,17 @@ func main() {
 }
 
 func daemonize() {
+	self, err := os.Executable()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "daemonize:", err)
+		os.Exit(1)
+	}
 	devNull, err := os.Open(os.DevNull)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "daemonize:", err)
 		os.Exit(1)
 	}
-	cmd := exec.Command("/proc/self/exe")
+	cmd := exec.Command(self)
 	cmd.Stdin = devNull
 	cmd.Stdout = devNull
 	cmd.Stderr = devNull
@@ -60,37 +65,48 @@ func daemonize() {
 }
 
 func onReady() {
-	systray.SetIcon(renderIcon(0, true))
-	systray.SetTitle("W 25:00")
+	systray.SetTemplateIcon(renderTemplateIcon(0), renderIcon(0, true))
 	systray.SetTooltip("pomogoro")
 
 	statusItem := systray.AddMenuItem("W 25:00", "")
 	statusItem.Disable()
+	pomodoroItem := systray.AddMenuItem("Pomodoro 1 / 4", "")
+	pomodoroItem.Disable()
 	deskItem := systray.AddMenuItem("Desk state: Standing", "")
 	deskItem.Disable()
 	systray.AddSeparator()
 	pauseItem := systray.AddMenuItem("Pause", "")
-	skipItem := systray.AddMenuItem("Skip phase", "")
+	skipItem := systray.AddMenuItem("Skip to break", "")
 	resetItem := systray.AddMenuItem("Reset", "")
 	systray.AddSeparator()
 	quitItem := systray.AddMenuItem("Quit", "")
 
 	cmds := make(chan Command, 4)
 
-	pauseItem.Click(func() { cmds <- CmdTogglePause })
-	skipItem.Click(func() { cmds <- CmdSkip })
-	resetItem.Click(func() { cmds <- CmdReset })
-	quitItem.Click(func() {
-		cmds <- CmdQuit
-		systray.Quit()
-	})
+	go func() {
+		for {
+			select {
+			case <-pauseItem.ClickedCh:
+				cmds <- CmdTogglePause
+			case <-skipItem.ClickedCh:
+				cmds <- CmdSkip
+			case <-resetItem.ClickedCh:
+				cmds <- CmdReset
+			case <-quitItem.ClickedCh:
+				cmds <- CmdQuit
+				systray.Quit()
+			}
+		}
+	}()
 
 	go runTimer(cmds, func(u UIUpdate) {
-		systray.SetTitle(u.title)
+		systray.SetTooltip("pomogoro: " + u.title)
+		systray.SetTemplateIcon(renderTemplateIcon(u.progress), renderIcon(u.progress, u.isWork))
 		statusItem.SetTitle(u.title)
+		pomodoroItem.SetTitle(u.pomodoroCount)
 		pauseItem.SetTitle(u.pauseLabel)
+		skipItem.SetTitle(u.skipLabel)
 		deskItem.SetTitle(u.deskState)
-		systray.SetIcon(renderIcon(u.progress, u.isWork))
 	})
 }
 
@@ -116,5 +132,7 @@ func checkSingleInstance() error {
 }
 
 func writePID() {
-	os.WriteFile(pidFile, []byte(strconv.Itoa(os.Getpid())), 0644)
+	if err := os.WriteFile(pidFile, []byte(strconv.Itoa(os.Getpid())), 0644); err != nil {
+		fmt.Fprintln(os.Stderr, "writePID:", err)
+	}
 }

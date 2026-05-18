@@ -11,8 +11,8 @@ import (
 const (
 	iconSize   = 22
 	iconScale  = 4
-	iconPad    = 2 // padding in final pixels
-	iconBorder = 1 // white border width in final pixels
+	iconPad    = 2
+	iconBorder = 1
 )
 
 var (
@@ -22,6 +22,18 @@ var (
 )
 
 func renderIcon(progress float64, isWork bool) []byte {
+	fill := colorWork
+	if !isWork {
+		fill = colorBreak
+	}
+	return renderPie(progress, fill, colorEmpty, color.RGBA{255, 255, 255, 255})
+}
+
+func renderTemplateIcon(progress float64) []byte {
+	return renderPie(progress, color.RGBA{0, 0, 0, 255}, color.RGBA{0, 0, 0, 80}, color.RGBA{0, 0, 0, 255})
+}
+
+func renderPie(progress float64, fill, empty, border color.RGBA) []byte {
 	hi := iconSize * iconScale
 	img := image.NewRGBA(image.Rect(0, 0, hi, hi))
 
@@ -30,13 +42,7 @@ func renderIcon(progress float64, isWork bool) []byte {
 	outerR := float64(hi)/2 - float64(iconPad*iconScale)
 	innerR := outerR - float64(iconBorder*iconScale)
 
-	fill := colorWork
-	if !isWork {
-		fill = colorBreak
-	}
-
 	limit := progress * 2 * math.Pi
-	white := color.RGBA{255, 255, 255, 255}
 
 	for y := range hi {
 		for x := range hi {
@@ -47,7 +53,7 @@ func renderIcon(progress float64, isWork bool) []byte {
 				continue
 			}
 			if dist2 > innerR*innerR {
-				img.SetRGBA(x, y, white)
+				img.SetRGBA(x, y, border)
 				continue
 			}
 			angle := math.Atan2(dy, dx) + math.Pi/2
@@ -57,7 +63,7 @@ func renderIcon(progress float64, isWork bool) []byte {
 			if angle < limit {
 				img.SetRGBA(x, y, fill)
 			} else {
-				img.SetRGBA(x, y, colorEmpty)
+				img.SetRGBA(x, y, empty)
 			}
 		}
 	}
