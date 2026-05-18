@@ -2,7 +2,7 @@
 
 package main
 
-func daemonize()                  {}
-func checkSingleInstance() error  { return nil }
-func writePID()                   {}
-func releasePID()                 {}
+func daemonize()                 {}
+func checkSingleInstance() error { return nil }
+func writePID()                  {}
+func releasePID()                {}

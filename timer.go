@@ -121,13 +121,13 @@ func (s *state) skip() {
 	case work:
 		s.phase = shortBreak
 		s.remaining = shortBreakDuration
-		notify("Short break", "5 minutes. "+deskLabel(!s.deskUp))
+		notifyText("Short break", "5 minutes. "+deskLabel(!s.deskUp))
 	case shortBreak, longBreak:
 		if s.phase == longBreak {
 			s.completedPomodoros = 0
 		}
 		s.enterWork()
-		notify("Work", deskLabel(s.deskUp))
+		notifyText("Work", deskLabel(s.deskUp))
 	}
 }
 

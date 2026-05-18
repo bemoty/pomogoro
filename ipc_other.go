@@ -11,4 +11,4 @@ var latestState atomic.Value
 var ipcListener net.Listener
 
 func listenIPC(_ chan<- command) {}
-func clientCmd(_ string)        {}
+func clientCmd(_ string)         {}
