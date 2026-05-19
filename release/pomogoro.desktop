@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=pomogoro
+Comment=Simple Pomodoro timer
+Exec=pomogoro -d
+Icon=pomogoro
+Terminal=false
+Categories=Utility;Clock;

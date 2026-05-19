@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>pomogoro</string>
+    <key>CFBundleIdentifier</key>
+    <string>dev.bemoty.pomogoro</string>
+    <key>CFBundleName</key>
+    <string>pomogoro</string>
+    <key>CFBundleDisplayName</key>
+    <string>pomogoro</string>
+    <key>CFBundleVersion</key>
+    <string>{{ .Version }}</string>
+    <key>CFBundleShortVersionString</key>
+    <string>{{ .Version }}</string>
+    <key>CFBundleIconFile</key>
+    <string>pomogoro</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>LSUIElement</key>
+    <true/>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+</dict>
+</plist>

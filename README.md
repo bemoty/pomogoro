@@ -7,34 +7,40 @@ Art by [wroniec](https://x.com/wrroniec/status/1340335840971657216)
 
 ## Build
 
-Needs CGo unfortunately
+CGo is only required on macOS (Cocoa systray). Linux and Windows build without it.
 
 ```
+# macOS
 CGO_ENABLED=1 go build -o pomogoro .
+
+# Linux / Windows
+CGO_ENABLED=0 go build -o pomogoro .
 ```
 
 ## Install
 
+**Arch Linux (AUR)**
 ```
-cp pomogoro ~/.local/bin/pomogoro
+yay -S pomogoro-bin
 ```
 
-Create `~/.local/share/applications/pomogoro.desktop`:
-
-```ini
-[Desktop Entry]
-Type=Application
-Name=pomogoro
-Comment=Simple Pomodoro timer
-Exec=/home/josh/.local/bin/pomogoro -d
-Icon=chronometer
-Terminal=false
-Categories=Utility;Clock;
+**macOS (Homebrew)**
 ```
+brew install --cask bemoty/tap/pomogoro
+```
+
+**Windows (Scoop)**
+```
+scoop bucket add bemoty https://github.com/bemoty/scoop-bucket
+scoop install pomogoro
+```
+
+**Windows (MSI)** 
+Download from the [releases page](https://github.com/bemoty/pomogoro/releases).
 
 ## CLI
 
-While the daemon is running, subcommands talk to it over a unix socket:
+The IPC subcommands work on Linux and macOS while the daemon is running:
 
 ```
 pomogoro status   # print current state, e.g. "W 22:14 2/4 standing"
@@ -54,6 +60,7 @@ set -g status-right "#(pomogoro status) | %H:%M"
 cmd + shift - p : pomogoro pause
 ```
 
-## Linux only
+## Notes
 
-Confirmed to work with KDE, your mileage may vary with other DEs
+- Linux: confirmed to work with KDE, your mileage may vary with other DEs
+- Windows: IPC subcommands are not supported
