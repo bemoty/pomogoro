@@ -8,6 +8,7 @@ SHA_AMD64=$(shasum -a 256 artifacts/pomogoro-amd64.dmg | awk '{print $1}')
 REPO_URL="https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/bemoty/homebrew-tap.git"
 
 git clone "$REPO_URL" /tmp/homebrew-tap
+mkdir -p /tmp/homebrew-tap/Casks
 
 cat > /tmp/homebrew-tap/Casks/pomogoro.rb << EOF
 cask "pomogoro" do
