@@ -1,8 +1,8 @@
 # pomogoro
 
 ![goro](.github/goro.jpg)
-_Goro my beloved_
 
+_Goro my beloved_
 Art by [wroniec](https://x.com/wrroniec/status/1340335840971657216)
 
 ## Build
