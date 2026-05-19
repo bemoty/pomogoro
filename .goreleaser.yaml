@@ -5,17 +5,8 @@ project_name: pomogoro
 before:
   hooks:
     - go mod tidy
-    - bash scripts/gen-icons.sh
 
 builds:
-  - id: darwin
-    goos: [darwin]
-    goarch: [amd64, arm64]
-    env:
-      - CGO_ENABLED=1
-    ldflags:
-      - -s -w
-
   - id: linux
     goos: [linux]
     goarch: [amd64, arm64]
@@ -51,43 +42,6 @@ release:
 
 checksum:
   name_template: checksums.txt
-
-app_bundles:
-  - id: darwin
-    ids: [darwin]
-    name: pomogoro
-    bundle: dev.bemoty.pomogoro
-    icon: assets/pomogoro.icns
-    templated_extra_files:
-      - src: release/Info.plist.tpl
-        dst: Contents/Info.plist
-
-dmg:
-  - id: darwin-dmg
-    ids: [darwin]
-    name: "pomogoro-{{.Arch}}"
-    use: appbundle
-    replace: true
-
-homebrew_casks:
-  - name: pomogoro
-    ids: [darwin-dmg]
-    app: pomogoro.app
-    repository:
-      owner: bemoty
-      name: homebrew-tap
-      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
-    directory: Casks
-    homepage: https://bemoty.dev
-    description: Simple Pomodoro timer
-
-msi:
-  - id: windows-msi
-    ids: [windows]
-    name: "pomogoro-{{.MsiArch}}"
-    wxs: windows/app.wxs
-    extra_files:
-      - assets/pomogoro.ico
 
 scoops:
   - repository:

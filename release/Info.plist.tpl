@@ -11,9 +11,9 @@
     <key>CFBundleDisplayName</key>
     <string>pomogoro</string>
     <key>CFBundleVersion</key>
-    <string>{{ .Version }}</string>
+    <string>@VERSION@</string>
     <key>CFBundleShortVersionString</key>
-    <string>{{ .Version }}</string>
+    <string>@VERSION@</string>
     <key>CFBundleIconFile</key>
     <string>pomogoro</string>
     <key>CFBundlePackageType</key>
