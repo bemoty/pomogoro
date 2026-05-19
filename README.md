@@ -29,6 +29,9 @@ yay -S pomogoro-bin
 brew install --cask bemoty/tap/pomogoro
 ```
 
+**macOS (dmg)** 
+Download from the [releases page](https://github.com/bemoty/pomogoro/releases).
+
 **Windows (Scoop)**
 ```
 scoop bucket add bemoty https://github.com/bemoty/scoop-bucket
