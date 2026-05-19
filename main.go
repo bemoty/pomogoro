@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"syscall"
 
 	"fyne.io/systray"
 )
@@ -40,7 +39,7 @@ func main() {
 	defer releasePID()
 
 	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP)
+	signal.Notify(sig, shutdownSignals...)
 	go func() {
 		<-sig
 		signal.Reset()
