@@ -31,12 +31,12 @@ func main() {
 		daemonize()
 	}
 
-	if err := checkSingleInstance(); err != nil {
+	if err := pid.checkSingleInstance(); err != nil {
 		notifyText("pomogoro", "already running")
 		os.Exit(1)
 	}
-	writePID()
-	defer releasePID()
+	pid.write()
+	defer pid.release()
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, shutdownSignals...)

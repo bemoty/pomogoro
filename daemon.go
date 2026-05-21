@@ -18,8 +18,12 @@ func runtimeFile(name string) string {
 	return fmt.Sprintf("/tmp/pomogoro-%d-%s", os.Getuid(), name)
 }
 
-var pidFile = runtimeFile("pomogoro.pid")
-var pidLock *os.File
+type pidManager struct {
+	file string
+	lock *os.File
+}
+
+var pid = &pidManager{file: runtimeFile("pomogoro.pid")}
 
 func daemonize() {
 	self, err := os.Executable()
@@ -44,8 +48,8 @@ func daemonize() {
 	os.Exit(0)
 }
 
-func checkSingleInstance() error {
-	f, err := os.OpenFile(pidFile, os.O_CREATE|os.O_RDWR, 0600)
+func (p *pidManager) checkSingleInstance() error {
+	f, err := os.OpenFile(p.file, os.O_CREATE|os.O_RDWR, 0600)
 	if err != nil {
 		return nil
 	}
@@ -53,22 +57,22 @@ func checkSingleInstance() error {
 		f.Close()
 		return fmt.Errorf("already running")
 	}
-	pidLock = f
+	p.lock = f
 	return nil
 }
 
-func writePID() {
-	if pidLock == nil {
+func (p *pidManager) write() {
+	if p.lock == nil {
 		return
 	}
-	pidLock.Truncate(0)
-	pidLock.WriteAt([]byte(strconv.Itoa(os.Getpid())), 0)
+	p.lock.Truncate(0)
+	p.lock.WriteAt([]byte(strconv.Itoa(os.Getpid())), 0)
 }
 
-func releasePID() {
-	if pidLock == nil {
+func (p *pidManager) release() {
+	if p.lock == nil {
 		return
 	}
-	pidLock.Close()
-	os.Remove(pidFile)
+	p.lock.Close()
+	os.Remove(p.file)
 }
