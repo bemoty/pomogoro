@@ -7,13 +7,13 @@ Art by [wroniec](https://x.com/wrroniec/status/1340335840971657216)
 
 ## Build
 
-CGo is only required on macOS (Cocoa systray). Linux and Windows build without it.
+CGo is only required on macOS (Cocoa systray). Linux builds without it.
 
 ```
 # macOS
 CGO_ENABLED=1 go build -o pomogoro .
 
-# Linux / Windows
+# Linux
 CGO_ENABLED=0 go build -o pomogoro .
 ```
 
@@ -30,15 +30,6 @@ brew install --cask bemoty/tap/pomogoro
 ```
 
 **macOS (dmg)** 
-Download from the [releases page](https://github.com/bemoty/pomogoro/releases).
-
-**Windows (Scoop)**
-```
-scoop bucket add bemoty https://github.com/bemoty/scoop-bucket
-scoop install pomogoro
-```
-
-**Windows (MSI)** 
 Download from the [releases page](https://github.com/bemoty/pomogoro/releases).
 
 ## CLI
@@ -66,4 +57,3 @@ cmd + shift - p : pomogoro pause
 ## Notes
 
 - Linux: confirmed to work with KDE, your mileage may vary with other DEs
-- Windows: IPC subcommands are not supported

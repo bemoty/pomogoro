@@ -15,14 +15,6 @@ builds:
     ldflags:
       - -s -w
 
-  - id: windows
-    goos: [windows]
-    goarch: [amd64]
-    env:
-      - CGO_ENABLED=0
-    ldflags:
-      - -s -w -H windowsgui
-
 archives:
   - id: linux
     ids: [linux]
@@ -33,26 +25,11 @@ archives:
       - src: assets/stopwatch.svg
         dst: pomogoro.svg
 
-  - id: windows
-    ids: [windows]
-    formats: [zip]
-
 release:
   draft: true
 
 checksum:
   name_template: checksums.txt
-
-scoops:
-  - repository:
-      owner: bemoty
-      name: scoop-bucket
-      token: "{{ .Env.SCOOP_BUCKET_TOKEN }}"
-    ids: [windows]
-    description: Simple Pomodoro timer
-    homepage: https://bemoty.dev
-    shortcuts:
-      - ["pomogoro.exe", "pomogoro"]
 
 aurs:
   - name: pomogoro-bin
