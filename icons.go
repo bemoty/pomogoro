@@ -92,6 +92,6 @@ func renderPie(progress float64, fill, empty, border color.RGBA) []byte {
 	}
 
 	var buf bytes.Buffer
-	png.Encode(&buf, out)
+	_ = png.Encode(&buf, out)
 	return buf.Bytes()
 }

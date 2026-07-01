@@ -8,5 +8,5 @@ import (
 
 func playDing() {
 	path := ensureDing()
-	exec.Command("afplay", path).Start()
+	_ = exec.Command("afplay", path).Start()
 }

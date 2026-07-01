@@ -8,7 +8,7 @@ import (
 )
 
 func notifyText(title, body string) {
-	exec.Command("osascript", "-e",
+	_ = exec.Command("osascript", "-e",
 		fmt.Sprintf(`display notification %q with title %q`, body, title),
 	).Run()
 }

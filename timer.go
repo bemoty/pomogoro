@@ -43,6 +43,24 @@ func newState() state {
 	return s
 }
 
+func (p phase) letter() string {
+	switch p {
+	case work:
+		return "W"
+	case shortBreak:
+		return "B"
+	default:
+		return "LB"
+	}
+}
+
+func (s *state) standing() bool {
+	if s.phase == work {
+		return s.deskUp
+	}
+	return !s.deskUp
+}
+
 func deskLabel(standing bool) string {
 	if standing {
 		return "Desk state: Standing"
@@ -77,17 +95,7 @@ func (s *state) trayTitle() string {
 	mins := total / 60
 	secs := total % 60
 
-	var prefix string
-	switch s.phase {
-	case work:
-		prefix = "W"
-	case shortBreak:
-		prefix = "B"
-	case longBreak:
-		prefix = "LB"
-	}
-
-	title := fmt.Sprintf("%s %02d:%02d", prefix, mins, secs)
+	title := fmt.Sprintf("%s %02d:%02d", s.phase.letter(), mins, secs)
 	if s.paused {
 		title += " ❄"
 	}

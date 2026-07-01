@@ -53,7 +53,7 @@ func (p *pidManager) checkSingleInstance() error {
 		return nil
 	}
 	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
-		f.Close()
+		_ = f.Close()
 		return fmt.Errorf("already running")
 	}
 	p.lock = f
@@ -64,6 +64,6 @@ func (p *pidManager) release() {
 	if p.lock == nil {
 		return
 	}
-	p.lock.Close()
-	os.Remove(p.file)
+	_ = p.lock.Close()
+	_ = os.Remove(p.file)
 }

@@ -20,8 +20,8 @@ func ensureDing() string {
 		if err != nil {
 			return
 		}
-		defer f.Close()
-		f.Write(dingSound)
+		defer func() { _ = f.Close() }()
+		_, _ = f.Write(dingSound)
 		dingPath = f.Name()
 	})
 	return dingPath

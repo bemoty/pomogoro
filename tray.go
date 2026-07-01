@@ -18,10 +18,7 @@ type uiUpdate struct {
 
 func (s *state) toUpdate(pl string) uiUpdate {
 	isWork := s.phase == work
-	ds := deskLabel(s.deskUp)
-	if !isWork {
-		ds = deskLabel(!s.deskUp)
-	}
+	ds := deskLabel(s.standing())
 
 	skipLabel := "Skip to break"
 	if !isWork {
@@ -100,6 +97,6 @@ func runMenuLoop(pauseItem, skipItem, resetItem, quitItem *systray.MenuItem, cmd
 
 func onExit() {
 	if ipcListener != nil {
-		ipcListener.Close()
+		_ = ipcListener.Close()
 	}
 }
