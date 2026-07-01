@@ -27,12 +27,12 @@ var pid = &pidManager{file: runtimeFile("pomogoro.pid")}
 func daemonize() {
 	self, err := os.Executable()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "daemonize:", err)
+		_, _ = fmt.Fprintln(os.Stderr, "daemonize:", err)
 		os.Exit(1)
 	}
 	devNull, err := os.Open(os.DevNull)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "daemonize:", err)
+		_, _ = fmt.Fprintln(os.Stderr, "daemonize:", err)
 		os.Exit(1)
 	}
 	cmd := exec.Command(self)
@@ -41,7 +41,7 @@ func daemonize() {
 	cmd.Stderr = devNull
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 	if err := cmd.Start(); err != nil {
-		fmt.Fprintln(os.Stderr, "daemonize:", err)
+		_, _ = fmt.Fprintln(os.Stderr, "daemonize:", err)
 		os.Exit(1)
 	}
 	os.Exit(0)
