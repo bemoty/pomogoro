@@ -9,16 +9,16 @@ import (
 )
 
 const (
-	iconSize   = 22
+	iconSize   = 64
 	iconScale  = 4
-	iconPad    = 2
-	iconBorder = 1
+	iconPad    = 6
+	iconBorder = 4
 )
 
 var (
-	colorWork  = color.RGBA{220, 60, 50, 255}
-	colorBreak = color.RGBA{50, 180, 90, 255}
-	colorEmpty = color.RGBA{60, 60, 60, 255}
+	colorWork  = color.RGBA{R: 220, G: 60, B: 50, A: 255}
+	colorBreak = color.RGBA{R: 50, G: 180, B: 90, A: 255}
+	colorEmpty = color.RGBA{R: 60, G: 60, B: 60, A: 255}
 )
 
 func renderIcon(progress float64, isWork bool) []byte {
@@ -26,11 +26,11 @@ func renderIcon(progress float64, isWork bool) []byte {
 	if !isWork {
 		fill = colorBreak
 	}
-	return renderPie(progress, fill, colorEmpty, color.RGBA{255, 255, 255, 255})
+	return renderPie(progress, fill, colorEmpty, color.RGBA{R: 255, G: 255, B: 255, A: 255})
 }
 
 func renderTemplateIcon(progress float64) []byte {
-	return renderPie(progress, color.RGBA{0, 0, 0, 255}, color.RGBA{0, 0, 0, 80}, color.RGBA{0, 0, 0, 255})
+	return renderPie(progress, color.RGBA{A: 255}, color.RGBA{A: 80}, color.RGBA{A: 255})
 }
 
 func renderPie(progress float64, fill, empty, border color.RGBA) []byte {
