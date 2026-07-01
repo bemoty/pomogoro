@@ -18,7 +18,7 @@ func main() {
 				clientCmd(arg)
 				return
 			default:
-				fmt.Fprintf(os.Stderr, "unknown subcommand: %s\n", arg)
+				_, _ = fmt.Fprintf(os.Stderr, "unknown subcommand: %s\n", arg)
 				os.Exit(1)
 			}
 		}
@@ -35,7 +35,6 @@ func main() {
 		notifyText("pomogoro", "already running")
 		os.Exit(1)
 	}
-	pid.write()
 	defer pid.release()
 
 	sig := make(chan os.Signal, 1)

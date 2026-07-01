@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"syscall"
 )
 
@@ -59,14 +58,6 @@ func (p *pidManager) checkSingleInstance() error {
 	}
 	p.lock = f
 	return nil
-}
-
-func (p *pidManager) write() {
-	if p.lock == nil {
-		return
-	}
-	p.lock.Truncate(0)
-	p.lock.WriteAt([]byte(strconv.Itoa(os.Getpid())), 0)
 }
 
 func (p *pidManager) release() {
