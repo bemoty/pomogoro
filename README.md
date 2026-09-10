@@ -32,6 +32,11 @@ brew install --cask bemoty/tap/pomogoro
 **macOS (dmg)** 
 Download from the [releases page](https://github.com/bemoty/pomogoro/releases).
 
+> The app is ad-hoc signed but not notarized, so on first launch macOS will
+> warn that the developer cannot be verified. Right-click (or Control-click)
+> the app in Finder and choose **Open**, then confirm in the dialog that
+> appears — you only need to do this once.
+
 ## CLI
 
 The IPC subcommands work on Linux and macOS while the daemon is running:
