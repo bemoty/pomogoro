@@ -5,7 +5,7 @@ VERSION="${1#v}"
 mkdir -p artifacts
 
 for arch in arm64 amd64; do
-    APP="artifacts/pomogoro-${arch}.app"
+    APP="artifacts/pomogoro.app"
     mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
     cp "artifacts/pomogoro-darwin-${arch}" "$APP/Contents/MacOS/pomogoro"
