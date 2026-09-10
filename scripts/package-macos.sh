@@ -12,6 +12,8 @@ for arch in arm64 amd64; do
     cp assets/pomogoro.icns "$APP/Contents/Resources/pomogoro.icns"
     sed "s/@VERSION@/${VERSION}/g" release/Info.plist.tpl > "$APP/Contents/Info.plist"
 
+    codesign --force --deep --sign - "$APP"
+
     hdiutil create \
         -volname "pomogoro" \
         -srcfolder "$APP" \
